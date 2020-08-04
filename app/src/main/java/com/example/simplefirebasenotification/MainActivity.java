@@ -160,22 +160,7 @@ public class MainActivity extends AppCompatActivity  {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String currentDateTime = dateFormat.format(new Date());
         Log.d(SN,currentDateTime);
-
-
-
-        //FirebaseDatabase database = FirebaseDatabase.getInstance();
-        //DatabaseReference myRef = database.getReference("message");
-        //myRef.setValue(Holder);
-
-
-
-        //push test
-       // final FirebaseDatabase database = FirebaseDatabase.getInstance();
-        //DatabaseReference ref = database.getReference();
-       // DatabaseReference postsRef = ref.child("posts");
-
-       // DatabaseReference newPostRef = postsRef.push();
-     //   newPostRef.setValue("gracehop", "Announcing COBOL, a New Programming Language");
+        
 
 
 

@@ -1,5 +1,13 @@
 package com.example.simplefirebasenotification;
 
+import android.app.ActivityManager;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.BatteryManager;
+import android.os.Environment;
+import android.os.StatFs;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -10,13 +18,17 @@ import com.google.firebase.messaging.RemoteMessage;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "MyFirebaseServices";
 
     //CPU vairiables
-    TextView textViewCPU ;
+
     ProcessBuilder processBuilder;
     String Holder = "";
     String[] DATA = {"/system/bin/cat", "/proc/cpuinfo"};
@@ -25,11 +37,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     byte[] byteArry ;
 
     private  void writeToDatabase(String msgRef){
-        Log.d(TAG,"Attempting to write to database" + msgRef);
+        Log.d(TAG,"Attempting to write to: " + msgRef);
 
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
         DatabaseReference mChildRef = mDatabase.child(msgRef);
-        mChildRef.setValue("test2");
+
+        Map<String, String> captureData = new HashMap<String, String>();
+
+        //mChildRef.setValue("test2");
         //CPU
         byteArry = new byte[1024];
         try{
@@ -49,9 +64,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
             ex.printStackTrace();
         }
-        DatabaseReference mCPU = mChildRef.child("CPU");
-        mCPU.setValue(Holder);
-    /*
+
+        captureData.put("CPU",Holder);
+
+
         //Charging
         // Charging State
         Context context = this;
@@ -62,65 +78,77 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
         boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
                 status == BatteryManager.BATTERY_STATUS_FULL;
-        DatabaseReference mIsCharging = mChildRef.child("isCharging");
-        mIsCharging.setValue(isCharging);
+
 
         // How are we charging?
         int chargePlug = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
         boolean usbCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_USB;
-        DatabaseReference mchargePlug = mChildRef.child("usbCharge");
-        mchargePlug.setValue(usbCharge);
+
 
         boolean acCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_AC;
 
-        DatabaseReference macCharge = mChildRef.child("acCharge");
-        macCharge.setValue(acCharge);
         //Battery Cycles
         int chargeCount = BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER;
-        DatabaseReference mchargeCount = mChildRef.child("chargeCount");
-        mchargeCount.setValue(chargeCount);
 
+        //Is phone charging
+        if (isCharging) {
+            captureData.put("isCharging","True");
+        }else{
+            captureData.put("isCharging","False");
+        }
+        //Is device plugged in
+        if (usbCharge) {
+            captureData.put("usbCharge","True");
+        }else{
+            captureData.put("usbCharge","False");
+        }
+        //is device Wireless charging
+        if (acCharge) {
+            captureData.put("acCharge","True");
+        }else{
+            captureData.put("acCharge","False");
+        }
 
+  /*  */
         //Storage
         StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
         //long bytesAvailable = (long)stat.getBlockSize() *(long)stat.getBlockCount();
         long bytesAvailable = stat.getFreeBytes();
-        long MegAvailable = bytesAvailable / 1048576; //meg Avail Storage Float.toString(val)
-        DatabaseReference mMegAvailable = mChildRef.child("MegAvailable");
-        mchargeCount.setValue(Float.toString(MegAvailable));
+        long storageMBAvailable = bytesAvailable / 1048576; //meg Avail Storage Float.toString(val)
+        captureData.put("storageMBAvailable",Float.toString(storageMBAvailable));
 
         long bytesTotal = stat.getTotalBytes();
-        long MegTotal = bytesTotal / 1048576; //megTotal Storage
-        DatabaseReference mMegTotal = mChildRef.child("MegTotal");
-        mchargeCount.setValue(Float.toString(MegTotal));
+        long storageMBTotal = bytesTotal / 1048576; //megTotal Storage
+        captureData.put("storageMBTotal",Float.toString(storageMBTotal));
 
         //RAM
         ActivityManager actManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
         ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
         actManager.getMemoryInfo(memInfo);
-        long totalMemory = memInfo.totalMem / 1048576;
-        DatabaseReference mtotalMemory = mChildRef.child("totalMemory");
-        mchargeCount.setValue(Float.toString(totalMemory));
+        long totalRAM = memInfo.totalMem / 1048576;
+        captureData.put("totalRAM",Float.toString(totalRAM));
         long availRAM = memInfo.availMem / 1048576; //Float.toSTring
-        DatabaseReference mavailRAM = mChildRef.child("availRAM");
-        mchargeCount.setValue(Float.toString(availRAM));
+        captureData.put("availRAM",Float.toString(availRAM));
         boolean lowMemory = memInfo.lowMemory;
-        DatabaseReference mlowMemory = mChildRef.child("lowMemory");
-        mchargeCount.setValue(mlowMemory);
-
+        if (lowMemory) {
+            captureData.put("lowMemory","True");
+        }else{
+            captureData.put("lowMemory","False");
+        }
         //network
         TelephonyManager manager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
         String carrierName = manager.getNetworkOperatorName();
-        DatabaseReference mcarrierName = mChildRef.child("carrierName");
-        mchargeCount.setValue(carrierName);
+        captureData.put("carrierName",carrierName);
 
         //time
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String currentDateTime = dateFormat.format(new Date());
-        DatabaseReference mcurrentDateTime = mChildRef.child("TimeStanp");
-        mchargeCount.setValue(currentDateTime);
+        captureData.put("currentDateTime",currentDateTime);
 
-     */
+        //store in DB
+        DatabaseReference mDevices = mChildRef.child("DeviceProfiles");
+        //mCPU.setValue(Holder);
+        mDevices.push().setValue(captureData);
     }
 
     /**
