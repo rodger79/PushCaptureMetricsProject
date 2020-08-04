@@ -8,6 +8,7 @@ import android.os.BatteryManager;
 import android.os.Environment;
 import android.os.StatFs;
 import android.telephony.TelephonyManager;
+import android.text.format.Time;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -167,8 +168,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
-        String message = String.valueOf(remoteMessage.getData());
-        // Check if message contains a data payload (beauty messages).
+        Date init = new Date();
+        //String messageBody = remoteMessage.getNotification().getBody();
+        //Log.d(TAG,messageBody);
+                // Check if message contains a data payload (beauty messages).
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
             createAndSendNotificationB(remoteMessage);
@@ -182,8 +185,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
 
         //Database testing
-        writeToDatabase("testingDataBase");
-
+        writeToDatabase("Campaign_1" );
+        Date finalTime = new Date();
+        long diffInMillies = init.getTime() - finalTime.getTime();
+        Log.d(TAG,"Database write time: " + diffInMillies);
     }
 
     private void createAndSendNotificationB(RemoteMessage remoteMessage){

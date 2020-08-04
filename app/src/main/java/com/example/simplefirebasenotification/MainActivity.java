@@ -160,7 +160,7 @@ public class MainActivity extends AppCompatActivity  {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String currentDateTime = dateFormat.format(new Date());
         Log.d(SN,currentDateTime);
-        
+
 
 
 
